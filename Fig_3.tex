@@ -1,0 +1,50 @@
+% SPDX-FileCopyrightText: 2025 Ovidio Garcia-Oliva
+% SPDX-License-Identifier: CC-BY-4.0
+% SPDX-FileContributor Ovidio Garcia-Oliva <ovidio.garcia@hereon.de
+%
+%\documentclass[twocolumn]{svjour3}
+%\documentclass{svjour3}
+\documentclass[12pt]{article}
+\usepackage{geometry}
+%\geometry{verbose,letterpaper,tmargin=2.54cm,bmargin=2.54cm,lmargin=2.54cm,rmargin=2.54cm}
+\geometry{verbose,total={6in, 8in},tmargin=0cm,bmargin=0cm,lmargin=0cm,rmargin=0pt}
+\usepackage[authoryear,round,elide,compress,sort]{natbib}
+%\usepackage[numbers,elide,compress,sort]{natbib}
+
+\bibliographystyle{spbasic-jpr}
+%\bibliographystyle{unsrtnat}
+%\bibliographystyle{unsrt}
+%\usepackage{sectsty}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{float}
+%\usepackage{xcolor}
+\usepackage[breaklinks]{hyperref}
+
+%gs  -o grayscale.pdf  -sDEVICE=pdfwrite  -sColorConversionStrategy=Gray  -sProcessColorModel=DeviceGray   draft0.pdf
+
+% \usepackage{lineno}
+% \linenumbers
+% \linespread{1.5}
+
+% please place your own definitions here and don't use \def but
+% \newcommand{}{}
+
+\begin{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}
+  \centering
+  \includegraphics[width=1\textwidth]{./out/CWG_temp.pdf}
+  \includegraphics[width=1\textwidth]{./out/CWG_DO.pdf}
+  \includegraphics[width=1\textwidth]{./out/CWG_NOx.pdf}
+  \includegraphics[width=1\textwidth]{./out/CWG_NH4.pdf}
+  \includegraphics[width=1\textwidth]{./out/CWG_PO4.pdf}
+  \includegraphics[width=1\textwidth]{./out/CWG_TP.pdf}
+\end{figure}
+
+
+\end{document}
