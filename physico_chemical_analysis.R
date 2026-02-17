@@ -74,7 +74,6 @@ ENSO.orig = read.csv("./data/ENSO.csv",comment.char = '#')
 ENSO.orig$date = ymd(paste(ENSO.orig$year,ENSO.orig$month,'15'))
 
 ###
-
 CWG.all = read.csv("./data/Lake_Atitlan_water_quality_CWG_2010-2024.csv",comment.char = '#')
 CWG.all$date = ymd(CWG.all$date)
 
@@ -353,9 +352,6 @@ date.axis()
 points(CWG.din.bottom$date,(CWG.din.bottom$z.nh4/CWG.din.bottom$z),type='p',pch=19,cex=1,col=alpha('black',0.5))
 lines(smooth.spline(CWG.din.bottom$date,(CWG.din.bottom$z.nh4/CWG.din.bottom$z)),type='l',pch=19,cex=1,lwd=2)
 
-
-
-
 plot(CWG.nox.surface$date,CWG.nox.surface$z,xlim=date.lim,type='n',ylim=c(1,100),
      ylab=latex2exp::TeX('$\\mu$g-N/-P L$^{-1}$'),lwd=2,cex=0.25,log='y',
      xlab='',xaxt='n',yaxt='l')
@@ -382,7 +378,7 @@ CWG.rnp$z=CWG.rnp$z.y/CWG.rnp$z.x
 
 
 plot(CWG.rnp$date,log10(CWG.rnp$z),
-     xlim=date.lim,type='n',ylim=c(0.03,30),pch=19,
+     xlim=date.lim,type='n',ylim=c(0.05,30),pch=19,
      ylab='',lwd=2,cex=0.25,log='y',
      xlab='',xaxt='n',yaxt='l'
      )
@@ -390,9 +386,17 @@ title(main='f. surface DIN-to-SRP ratio (depth < 30 m)',adj=0.)
 date.axis()
 
 abline(h=1,lty=2)
-abline(h=(7.22)*c(1),col='tomato',lty=1)
+#abline(h=(7.22)*c(1),col='pink',lty=1.5)
+# abline(h=(5.6)*c(1),col='red',lty=1)
+# abline(h=(20.9)*c(1),col='darkred',lty=1)
+
+polygon(c(date.lim,rev(date.lim)),c(5.6,5.6,20.9,20.9),col=alpha('tomato',0.25),border=NA)
+
 points(CWG.rnp$date,(CWG.rnp$z),type='p',pch=19,cex=0.75,col=alpha('black',0.5))
 lines(smooth.spline(CWG.rnp$date,(CWG.rnp$z)),type='l',pch=19,cex=1,lwd=2)
+
+text(date.lim[1]+30,10,'N and P co-lim.',adj=c(0,0.5),col='tomato',font=2)
+text(date.lim[1]+30,0.5,'N lim.',adj=c(0,0.5),col='gray',font=2)
 
 dev.off()
 
@@ -421,7 +425,7 @@ ENSO.orig$date = ENSO.orig$date.y
 ENSO = merge(ENSO.orig,CWG,by='Group.1')
 ENSO = ENSO[order(as.POSIXct(ENSO$date)),]
 
-pdf('./fig/Fig_S2.pdf',w=7,h=4)
+pdf('./fig/Fig_S2.pdf',w=7,h=7/3*2)
 par(mfrow=c(2,3),mai=0.75*c(0.8, 0.8, 0.2, 0.2),las=1,oma=c(1,0,0,0))
 layout(matrix(c(1,2,3,4,5,6),nrow=2))
 
@@ -430,7 +434,7 @@ ENSO = ENSO[ENSO$year>2010,]
 
 s = lm(max.temp~date+ONI+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
 summary(s)
-s0 = glm(max.temp~date+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
+s0 = lm(max.temp~date+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
 summary(s0)
 
 anova(s,s0)
@@ -438,49 +442,56 @@ AIC(s)
 AIC(s0)
 
 rr = summary(s)
-rr$coefficients[2,1]*365.25*10
-rr$coefficients[2,2]*365.25*10
-rr$coefficients[2,4]
-
-rr$coefficients[3,1]
-rr$coefficients[3,2]
-rr$coefficients[3,4]
-
 p = predict(s,newdata = ENSO)
 p0 = predict(s0,newdata = ENSO)
 
 plot(ENSO$date,ENSO$max.temp,
      pch=19,
-     col='gray',
+     col=alpha('gray',0.5),
      xlab='',
      ylab='temperature °C',
      xaxt='n'
 )
 date.axis()
-title(main='a. surface lake temperature',adj=0)
+title(main='a. surface',adj=0)
 lines(ENSO$date,p,pch=19,col='black',cex=0.2)
 #lines(ENSO$date,p0,pch=19,col='green')
 
 plot(ENSO$max.temp,p,ylim=c(20,25),
      xlim=c(20,25),
      pch=19,
-     col='gray',
+     col=alpha('gray',0.5),
      xlab='',
      ylab='modeled temperature °C'
 )
 title(main='d.',adj=0)
-
 #points(ENSO$max.temp,p0,col='green')
 abline(a=0,b=1,lty=3)
 
-
+title(TeX(paste('$r^2$ =',round(rr$r.squared,digits=2))),adj=1)
+text(20,25,
+     paste0('date: ',round(rr$coefficients[2,1]*365.25*10,digits=2),' ± ',
+           round(rr$coefficients[2,2]*365.25*10,digits=2),
+           ', p = ',round(rr$coefficients[2,4],digits=3)),
+     adj=c(-0.03,1.4)
+)
+text(20,25-0.1*(25-20),
+     paste0('ONI: ',round(rr$coefficients[3,1],digits=2),' ± ',
+            round(rr$coefficients[3,2],digits=2),
+            ', p = ',round(rr$coefficients[3,4],digits=3)),
+     adj=c(-0.03,1.4)
+)
+text(20,25-0.2*(25-20),
+     paste0(' df = ',rr$df[2]),
+     adj=c(-0.03,1.4)
+)
 ###################
 ENSO = ENSO[!is.na(ENSO$ie) & ENSO$max.depth>70,]
 ENSO = ENSO[ENSO$year > 2018,]
 
-s = lm(lake.temperature~date+ONI+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
+s = lm(lake.temperature~date+ONI+as.factor(month),data=ENSO,weights = 1/lake.temperature.unc)
 summary(s)
-s0 = lm(lake.temperature~date+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
+s0 = lm(lake.temperature~date+as.factor(month),data=ENSO,weights = 1/lake.temperature.unc)
 summary(s0)
 
 anova(s,s0)
@@ -488,14 +499,6 @@ AIC(s)
 AIC(s0)
 
 rr=summary(s)
-rr$coefficients[2,1]*365.25*10
-rr$coefficients[2,2]*365.25*10
-rr$coefficients[2,4]
-
-rr$coefficients[3,1]
-rr$coefficients[3,2]
-rr$coefficients[3,4]
-
 p = predict(s,newdata = ENSO)
 p0 = predict(s0,newdata = ENSO)
 
@@ -505,13 +508,13 @@ plot(ENSO$date,ENSO$lake.temperature,
      col='gray',
      xaxt='n'
 )
-title(main='b. whole-lake temperature',adj=0)
+title(main='b. whole-lake',adj=0)
 date.axis()
 lines(ENSO$date,p,pch=19,col='black')
 #lines(ENSO$date,p0,pch=19,col='green')
 
 plot(ENSO$lake.temperature,p,
-     pch=19,col='gray',
+     pch=19,col=alpha('gray',0.5),
      ylim=c(20.3,21.3),xlim=c(20.3,21.3),
      xlab='',ylab='')
 title(main='e.',adj=0)
@@ -519,11 +522,28 @@ mtext(side=1, 'observed temperature °C',outer=T,cex=0.8,line=-2)
 #points(ENSO$lake.temperature,p0,col='green')
 abline(a=0,b=1,lty=3)
 
+title(TeX(paste('$r^2$ =',round(rr$r.squared,digits=2))),adj=1)
+text(20.3,21.3,
+     paste0('date: ',round(rr$coefficients[2,1]*365.25*10,digits=2),' ± ',
+           round(rr$coefficients[2,2]*365.25*10,digits=2),
+           ', p = ',round(rr$coefficients[2,4],digits=5)),
+     adj=c(-0.03,1.4)
+)
+text(20.3,21.3-0.1*(21.3-20.3),
+     paste0('ONI: ',round(rr$coefficients[3,1],digits=3),' ± ',
+            round(rr$coefficients[3,2],digits=3),
+            ', p = ',round(rr$coefficients[3,4],digits=2)),
+     adj=c(-0.03,1.4)
+)
+text(20.3,21.3-0.2*(21.3-20.3),
+     paste0(' df = ',rr$df[2]),
+     adj=c(-0.03,1.4)
+)
 ###################
 
-s = glm(min.temp~date+ONI+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
+s = lm(min.temp~date+ONI+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
 summary(s)
-s0 = glm(min.temp~date+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
+s0 = lm(min.temp~date+as.factor(month),data=ENSO,weights = 1/ENSO$lake.temperature.unc)
 summary(s0)
 
 anova(s,s0)
@@ -531,42 +551,55 @@ AIC(s)
 AIC(s0)
 
 rr=summary(s)
-rr$coefficients[2,1]*365.25*10
-rr$coefficients[2,2]*365.25*10
-rr$coefficients[2,4]
-
-rr$coefficients[3,1]
-rr$coefficients[3,2]
-rr$coefficients[3,4]
-
 p = predict(s,newdata = ENSO)
 p0 = predict(s0,newdata = ENSO)
 
 plot(ENSO$date,ENSO$min.temp,
-     pch=19,col='gray',
+     pch=19,col=alpha('gray',0.5),
      xlab='',ylab='',xaxt='n')
 date.axis()
 
-title(main='c. minimum lake temperature',adj=0)
+title(main='c. minimum',adj=0)
 lines(ENSO$date,p,pch=19,col='black')
 #lines(ENSO$date,p0,pch=19,col='green')
 
 plot(ENSO$min.temp,p,ylim=c(20.2,20.5),xlim=c(20.2,20.5),
-     pch=19,col='gray',
+     pch=19,col=alpha('gray',0.5),
      xlab='',ylab='')
 #points(ENSO$min.temp,p0,col='green')
 abline(a=0,b=1,lty=3)
 title(main='f.',adj=0)
 
+title(TeX(paste('$r^2$ =',round(rr$r.squared,digits=2))),adj=1)
+text(20.2,20.5,
+     paste0('date: ',round(rr$coefficients[2,1]*365.25*10,digits=3),' ± ',
+           round(rr$coefficients[2,2]*365.25*10,digits=4),
+           ', p = ',round(rr$coefficients[2,4],digits=4)),
+     adj=c(-0.03,1.4)
+)
+text(20.2,20.5-0.1*(20.5-20.2),
+     paste0('ONI: ',round(rr$coefficients[3,1],digits=4),' ± ',
+            round(rr$coefficients[3,2],digits=4),
+            ', p = ',round(rr$coefficients[3,4],digits=3)),
+     adj=c(-0.03,1.4)
+)
+text(20.2,20.5-0.2*(20.5-20.2),
+     paste0(' df = ',rr$df[2]),
+     adj=c(-0.03,1.4)
+)
 
+dev.off()
 ##########
+
+pdf('./fig/Fig_S4.pdf',w=4,h=4)
+par(mfrow=c(1,1),mai=0.99*c(0.8, 0.8, 0.2, 0.2),las=1,oma=c(1,1,0,0),mgp=c(2.5,1,0))
 
 ENSO = ENSO[!is.na(ENSO$ie) & ENSO$max.depth>70,]
 ENSO = ENSO[ENSO$year>2018,]
 
-s = lm(SS~date+ONI+as.factor(month),data=ENSO)#,weights = 1/abs(ENSO$SS.unc))
+s = lm(SS~date+ONI+as.factor(month),data=ENSO)
 summary(s)
-s0 = glm(SS~date+as.factor(month),data=ENSO)#,weights = 1/abs(ENSO$SS.unc))
+s0 = lm(SS~date+as.factor(month),data=ENSO)
 summary(s0)
 
 anova(s,s0)
@@ -574,18 +607,40 @@ AIC(s)
 AIC(s0)
 
 rr=summary(s)
-rr$coefficients[2,1]*365.25*10
-rr$coefficients[2,2]*365.25*10
-rr$coefficients[2,4]
+p = predict(s,newdata = ENSO)
+p0 = predict(s0,newdata = ENSO)
 
-rr$coefficients[3,1]
-rr$coefficients[3,2]
-rr$coefficients[3,4]
+plot(ENSO$SS,p,
+     xlim=c(-0,30),
+     ylim=c(-0,30),
+     pch=19,col=alpha('gray',0.5),
+     xlab=TeX('observed stability, kJ m$^{-2}$'),
+     ylab=TeX('modelled stability, kJ m$^{-2}$')
+     )
+abline(a=0,b=1,lty=3)
+
+title(TeX(paste('$r^2$ =',round(rr$r.squared,digits=2))),adj=1)
+text(0,30,
+     paste0('date: ',round(rr$coefficients[2,1]*365.25*10,digits=1),' ± ',
+            round(rr$coefficients[2,2]*365.25*10,digits=1),
+            ', p = ',round(rr$coefficients[2,4],digits=4)),
+     adj=c(-0.03,1.4)
+)
+text(0,30-0.1*(30-0),
+     paste0('ONI: ',round(rr$coefficients[3,1],digits=1),' ± ',
+            round(rr$coefficients[3,2],digits=1),
+            ', p = ',round(rr$coefficients[3,4],digits=3)),
+     adj=c(-0.03,1.4)
+)
+text(0,30-0.2*(30-0),
+     paste0(' df = ',rr$df[2]),
+     adj=c(-0.03,1.4)
+)
 
 dev.off()
 
 ################################################################################
-sc
+
 
 ENSO.orig$Group.1 = paste(ENSO.orig$year,ENSO.orig$month)
 ENSO.orig$date = ENSO.orig$date.y
@@ -595,17 +650,39 @@ weather$Group.1 = paste(weather$year,weather$month)
 all.data = merge(weather,ENSO,by='Group.1')
 
 library(corrgram)
-sub.all.data = subset(all.data,select = c(ec.t.mean,sa.t.mean,ec.wind.vel,sa.wind.vel,ONI))
-colnames(sub.all.data) = c('air Temp. EC','air Temp. SA','wind vel. EC','wind vel. SA','ONI')
+sub.all.data = subset(all.data,select = c(lake.temperature,ec.t.mean,sa.t.mean,ec.wind.vel,sa.wind.vel,ONI))
+colnames(sub.all.data) = c('Lake Temp., ºC','Air Temp. EC, ºC','Air Temp. SA, ºC','Wind Vel. EC, km/h','Wind Vel. SA, km/h','ONI, ºC')
 
-pdf('./fig/Fig_S3.pdf',w=6,h=6)
-corrgram(sub.all.data,
-         order=TRUE, 
+pdf('./fig/Fig_S3.pdf',w=8,h=8)
+par(mfrow=c(4,4),mai=0.75*c(0.75, 0.75, 0.2, 0.2),las=1,oma=c(1,0,0,0),mgp=c(2.,.66,0))
+
+n = 1
+for(i in 1:6){
+  for(j in 1:6){
+    if(i>=j) next
+    plot(sub.all.data[[i]],sub.all.data[[j]],
+         xlab=colnames(sub.all.data)[i],
+         ylab=colnames(sub.all.data)[j],
          pch=20,
-         lower.panel=panel.pts, 
-         upper.panel=panel.cor,
-         #diag.panel=panel.density
-         )
-title(main="Correlation of weather and climate variables",adj=0)
+         xaxt='n',
+         yaxt='n',
+         col=alpha('gray',0.5)
+    )
+    axis(side=1,pretty(round(sub.all.data[[i]]),n=4))
+    axis(side=2,pretty(round(sub.all.data[[j]]),n=4))
+    title(paste0(letters[n],'.'),adj=0)
+    s = lm(sub.all.data[[j]]~sub.all.data[[i]])
+    abline(s)
+    r = summary(s)
+    title(TeX(paste('$r^2$ =',round(r$r.squared,digits=2))),adj=1)
+    text(min(sub.all.data[[i]],na.rm=T), max(sub.all.data[[j]],na.rm=T),
+         paste0(round(r$coefficients[2,1],digits=2),' ± ',
+                round(r$coefficients[2,2],digits=2),', p = ',round(r$coefficients[2,4],digits=3)),
+         adj=c(-0.03,1.4)
+    )
+    n = n+1
+  }
+}
+
 dev.off()
 

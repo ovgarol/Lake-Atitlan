@@ -7,6 +7,7 @@
 # DO NOT EXECUTE: THIS IS INCLUDED JUST AS REFERENCE
 
 library(lubridate)
+library(stringr)
 
 CWG.nox = read.csv("/home/data/CWG_NOX.csv")
 CWG.nox$date = dmy(CWG.nox$date)
@@ -45,6 +46,8 @@ CWG.temp = read.csv("/home/data/Full_WG_Temp.csv")
 CWG.temp$date = dmy(CWG.temp$Fecha)
 CWG.temp$temperature = as.numeric(CWG.temp$Temp)
 CWG.temp = subset(CWG.temp,select=c(date,depth,temperature))
+CWG.temp$i = as.character(str_pad(1:length(CWG.temp$date),5,pad='0'))
+CWG.temp = CWG.temp[,c(4,1,2,3)]
 
 files = list(CWG.temp,
              CWG.do,
@@ -76,8 +79,12 @@ db$total_phosphorus[db$`ortho-phosphate`>db$total_phosphorus] = NA
 
 colnames(db)
 
-plot(db)
-db[,2:8] = round(db[,2:8],digits=3)
-write.csv(db,'Lake_Atitlan_water_quality_CWG_2010-2024.csv',row.names = F)
+db[,4:9] = round(db[,4:9],digits=3)
+
+db = aggregate(db,by=list(j=db$i),mean)
+
+db = subset(db,select=-c(i))
+
+write.csv(db,'Lake_Atitlan_water_quality_CWG_2010-2024--.csv',row.names = F,quote = F)
 
 
